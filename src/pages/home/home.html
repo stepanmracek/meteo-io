@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Temperature in last 10 minutes
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <div style="display: block;">
+    <canvas baseChart width="400" height="400"
+                [datasets]="dataset.data"
+                [labels]="dataset.labels"
+                [options]="lineChartOptions"
+                [colors]="lineChartColors"
+                [legend]="false"
+                chartType="line">
+    </canvas>
+  </div>
+  <pre>{{tempLabels|json}}</pre>
+</ion-content>
