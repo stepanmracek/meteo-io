@@ -36,9 +36,7 @@ export class HomePage implements OnInit {
 	labels: string[] = [];
 
 	constructor(public navCtrl: NavController, private db: AngularFireDatabase) {
-		for (var i = 0; i < 120; i++) {
-			this.dataset.labels.push("    ");
-		}
+
 	}
 
 	ngOnInit() {
@@ -48,23 +46,21 @@ export class HomePage implements OnInit {
 				limitToLast: 120,
 			}
 		}).subscribe((items: IDbValue[]) => {
-			let dataset: IChartData = {
-				labels: [],
-				data: [{
-					label: "temperature",
-					data: [],
-					lineTension: 0
-				}]
-			};
+			let data = [{
+				label: "temperature",
+				data: [],
+				lineTension: 0
+			}];
 
+			this.dataset.labels.length = 0;
 			for (var i = 0; i < items.length; i++) {
 				var item = items[i];
-				let label = item.$key.substr(11).replace("-",":").replace("-",":");
-				dataset.data[0].data.push(item.temperature);
-				dataset.labels.push(label);
+				let label = item.$key.split('-').slice(3).join(':');
+				data[0].data.push(item.temperature);
+				this.dataset.labels.push(label);
 			}
 
-			this.dataset = dataset;
+			this.dataset.data = data;
 		});
 	}
 
