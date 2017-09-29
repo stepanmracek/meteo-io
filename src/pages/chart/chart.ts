@@ -54,14 +54,17 @@ export class ChartPage implements OnInit, OnDestroy {
 				var modulo = Math.floor(Math.log(items.length));
 				if (modulo < 1) modulo = 1;
 				for (var i = 0; i < items.length; i++) {
-					if (i % modulo != 0) continue;
+					if (items.length > 120 && i % modulo != 0) continue;
 
 					var item = items[i];
 					let label = new Date(item.$key).toLocaleTimeString();
 					data[0].data.push(item[this.measurement]);
 					this.dataset.labels.push(label);
 				}
-				console.log("got", items.length, "values; modulo is ", modulo, "-> filtered to ", data[0].data.length, "values");
+
+				if (items.length > 120) {
+					console.log("got", items.length, "values; modulo is ", modulo, "-> filtered to ", data[0].data.length, "values");
+				}
 
 				this.dataset.data = data;
 			});
