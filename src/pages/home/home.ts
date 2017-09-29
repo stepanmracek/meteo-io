@@ -22,7 +22,7 @@ export interface IOverviewData {
 	selector: 'page-home',
 	templateUrl: 'home.html'
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
 
 	overviewData: IOverviewData[] = [];
 	subscription: Subscription = null;

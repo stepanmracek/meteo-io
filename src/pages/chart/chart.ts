@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { NavParams } from 'ionic-angular';
 import { AngularFireDatabase } from 'angularfire2/database';
-import { Observable, BehaviorSubject, Subscription } from 'rxjs'
+import { BehaviorSubject, Subscription } from 'rxjs'
 import 'rxjs/add/operator/map'
 
 import { IDbItem } from '../../app/interfaces';
@@ -19,7 +19,7 @@ interface IChartData {
 	selector: 'chart-home',
 	templateUrl: 'chart.html'
 })
-export class ChartPage implements OnInit {
+export class ChartPage implements OnInit, OnDestroy {
 
 	deviceName: string;
 	measurement: string;
@@ -27,7 +27,7 @@ export class ChartPage implements OnInit {
 	timespanSubject: BehaviorSubject<number> = new BehaviorSubject<number>(this.timespan);
 	subscription: Subscription = null;
 
-	constructor(private navParams: NavParams, private db: AngularFireDatabase) {
+	constructor(navParams: NavParams, private db: AngularFireDatabase) {
 		var params = navParams.data;
 		this.deviceName = params.device.name;
 		this.measurement = params.measurement.measurement;
