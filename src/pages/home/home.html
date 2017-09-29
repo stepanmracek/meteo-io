@@ -6,19 +6,19 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content>
 
-  <ion-card *ngFor="let device of overviewData">
+  <ion-list *ngFor="let device of overviewData">
     <ion-item style="text-align: center;">
       <h1>{{device.name}}</h1>
-      <p>{{device.timestamp.toLocaleString()}}</p>
+      <p>{{formattedTimestamp[device.name]}}</p>
     </ion-item>
-    <button ion-item (click)="goto(device, values)" *ngFor="let values of device.values">
+    <button ion-item detail-push (click)="goto(device, values)" *ngFor="let values of device.values">
       <ion-icon item-start [color]="getColor(values.measurement)" [name]="getIcon(values.measurement)"></ion-icon>
       <ion-card-header>
         {{values.measurement}} <h1>{{values.value.toFixed(1)}}{{getUnit(values.measurement)}}</h1>
       </ion-card-header>
     </button>
-  </ion-card>
+  </ion-list>
 
 </ion-content>
