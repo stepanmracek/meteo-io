@@ -1,21 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { NavController, NavParams } from 'ionic-angular';
 import { AngularFireDatabase } from 'angularfire2/database';
+import { Observable, Subscription } from 'rxjs'
+import 'rxjs/add/operator/map'
 
-interface IDbValue {
-	humidity: number;
-	temperature: number;
-	$key: string;
-	$exists: Function
+import { IDbItem } from '../../app/interfaces';
+import { ChartPage } from '../chart/chart';
+
+export interface IMeasurement {
+	measurement: string;
+	value: number;
 }
 
-export interface IChartData {
-	labels: string[];
-	data: {
-		label: string;
-		data: number[];
-		lineTension: number;
-	}[]
+export interface IOverviewData {
+	name: string;
+	timestamp: Date;
+	values: IMeasurement[]
 }
 
 @Component({
@@ -24,81 +24,87 @@ export interface IChartData {
 })
 export class HomePage implements OnInit {
 
-	dataset: IChartData = {
-		labels: [],
-		data: [{
-			label: "temperature",
-			data: [],
-			lineTension: 0
-		}]
-	}
-
-	labels: string[] = [];
+	overviewData: IOverviewData[] = [];
+	subscription: Subscription = null;
 
 	constructor(public navCtrl: NavController, private db: AngularFireDatabase) {
 
 	}
 
-	ngOnInit() {
-		this.db.list('/meteo', {
-			query: {
-				orderByKey: true,
-				limitToLast: 120,
-			}
-		}).subscribe((items: IDbValue[]) => {
-			let data = [{
-				label: "temperature",
-				data: [],
-				lineTension: 0
-			}];
+	dbValuesToMeasurement(data: IOverviewData, dbValues: IDbItem[]) {
+		data.values.length = 0;
+		if (dbValues.length == 0) {
+			return;
+		}
 
-			this.dataset.labels.length = 0;
-			for (var i = 0; i < items.length; i++) {
-				var item = items[i];
-				let label = item.$key.split('-').slice(3).join(':');
-				data[0].data.push(item.temperature);
-				this.dataset.labels.push(label);
-			}
+		data.timestamp = new Date(dbValues[0].$key);
 
-			this.dataset.data = data;
-		});
+		Object.keys(dbValues[0]).forEach(key => {
+			data.values.push({measurement: key, value: dbValues[0][key]})
+		})
 	}
 
-	// lineChart
-	public lineChartOptions: any = {
-		responsive: true,
-		animation: {
-			duration: 0, // general animation time
-		},
-		hover: {
-			animationDuration: 0, // duration of animations when hovering an item
-		},
-		responsiveAnimationDuration: 0, // animation duration after a resize
-	};
-	public lineChartColors: Array<any> = [
-		{ // grey
-			backgroundColor: 'rgba(148,159,177,0.2)',
-			borderColor: 'rgba(148,159,177,1)',
-			pointBackgroundColor: 'rgba(0,0,0,0)',
-			pointBorderColor: 'rgba(0,0,0,0)',
-			pointHoverBackgroundColor: 'rgba(0,0,0,0)',
-			pointHoverBorderColor: 'rgba(0,0,0,0)',
-		},
-		{ // dark grey
-			backgroundColor: 'rgba(77,83,96,0.2)',
-			borderColor: 'rgba(77,83,96,1)',
-			pointBackgroundColor: 'rgba(77,83,96,1)',
-			pointBorderColor: '#fff',
-			pointHoverBackgroundColor: '#fff',
-			pointHoverBorderColor: 'rgba(77,83,96,1)'
-		},
-		{ // grey
-			backgroundColor: 'rgba(148,159,177,0.2)',
-			borderColor: 'rgba(148,159,177,1)',
-			pointBackgroundColor: 'rgba(148,159,177,1)',
-			pointBorderColor: '#fff',
-			pointHoverBackgroundColor: '#fff',
-			pointHoverBorderColor: 'rgba(148,159,177,0.8)'
+	ngOnInit() {
+		this.subscription = this.db
+			.list('/devices')
+			.mergeMap((devices: IDbItem[]) => {
+				return Observable.from(devices);
+			})
+			.map((device: IDbItem) => {
+				return device.$key;
+			})
+			.switchMap(deviceName => {
+				return this.db
+					.list('/values/' + deviceName, { query: { orderByKey: true, limitToLast: 1 } })
+					.map((values: IDbItem[]) => { return {deviceName: deviceName, values: values}; })
+			})
+			.subscribe(data => {
+				var item = this.overviewData.find(item => item.name == data.deviceName)
+				if (item) {
+					this.dbValuesToMeasurement(item, data.values)
+				} else {
+					var newItem: IOverviewData = {name: data.deviceName, timestamp: new Date(), values: []};
+					this.dbValuesToMeasurement(newItem, data.values);
+					this.overviewData.push(newItem);
+				}
+				console.log("received overview data:", this.overviewData.map(i => i.name + "-" + i.timestamp.toJSON()));
+			});
+	}
+
+	ngOnDestroy() {
+		if (this.subscription) this.subscription.unsubscribe();
+	}
+
+	getIcon(measurement: string): string {
+		switch (measurement) {
+			case "temperature": return "thermometer";
+			case "humidity": return "water";
+			default: return "help";
 		}
-	];
+	}
+
+	getUnit(measurement: string): string {
+		switch (measurement) {
+			case "temperature": return "°C";
+			case "humidity": return "%";
+			default: return "";
+		}
+	}
+
+	getColor(measurement: string): string {
+		switch (measurement) {
+			case "temperature": return "danger";
+			case "humidity": return "primary";
+			default: return "dark";
+		}
+	}
+
+	select(device) {
+		console.log(device);
+	}
+
+	goto(device: IOverviewData, values: IMeasurement) {
+		console.log(device, values);
+		this.navCtrl.push(ChartPage, { device: device, measurement: values });
+	}
 }

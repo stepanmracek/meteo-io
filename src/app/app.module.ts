@@ -9,23 +9,26 @@ import { ChartsModule } from 'ng2-charts';
 
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
+import { ChartPage } from '../pages/chart/chart';
 
 @NgModule({
   declarations: [
     MyApp,
-    HomePage
+    HomePage,
+    ChartPage,
   ],
   imports: [
     BrowserModule,
     IonicModule.forRoot(MyApp),
-    AngularFireModule.initializeApp({databaseURL: 'https://<db-name>.firebaseio.com/'}),
+    AngularFireModule.initializeApp({databaseURL: 'https://meteo-72808.firebaseio.com/'}),
     AngularFireDatabaseModule,
     ChartsModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    HomePage
+    HomePage,
+    ChartPage,
   ],
   providers: [
     StatusBar,

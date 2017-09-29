@@ -1,21 +1,24 @@
 <ion-header>
-  <ion-navbar>
+  <ion-navbar color="primary">
     <ion-title>
-      Temperature in last 10 minutes
+      Devices
     </ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding>
-  <div style="display: block;">
-    <canvas baseChart width="400" height="400"
-                [datasets]="dataset.data"
-                [labels]="dataset.labels"
-                [options]="lineChartOptions"
-                [colors]="lineChartColors"
-                [legend]="false"
-                chartType="line">
-    </canvas>
-  </div>
-  <pre>{{tempLabels|json}}</pre>
+
+  <ion-card *ngFor="let device of overviewData">
+    <ion-item style="text-align: center;">
+      <h1>{{device.name}}</h1>
+      <p>{{device.timestamp.toLocaleString()}}</p>
+    </ion-item>
+    <button ion-item (click)="goto(device, values)" *ngFor="let values of device.values">
+      <ion-icon item-start [color]="getColor(values.measurement)" [name]="getIcon(values.measurement)"></ion-icon>
+      <ion-card-header>
+        {{values.measurement}} <h1>{{values.value.toFixed(1)}}{{getUnit(values.measurement)}}</h1>
+      </ion-card-header>
+    </button>
+  </ion-card>
+
 </ion-content>

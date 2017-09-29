@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-navbar color="primary">
+    <ion-title>
+      {{measurement}}
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+
+  <ion-item>
+    <ion-label>Time span</ion-label>
+    <ion-select [(ngModel)]="timespan" (ngModelChange)="onTimespanChange($event)">
+      <ion-option [value]="120">Last 10 minutes</ion-option>
+      <ion-option [value]="720">Last hour</ion-option>
+      <ion-option [value]="4320">Last 6 hours</ion-option>
+      <ion-option [value]="17280">Last 24 hours</ion-option>
+    </ion-select>
+  </ion-item>
+
+  <div style="display: block; margin-top: 20px">
+    <canvas baseChart width="400" height="400"
+                [datasets]="dataset.data"
+                [labels]="dataset.labels"
+                [options]="lineChartOptions"
+                [colors]="lineChartColors"
+                [legend]="false"
+                chartType="line">
+    </canvas>
+  </div>
+  <pre>{{tempLabels|json}}</pre>
+
+</ion-content>
