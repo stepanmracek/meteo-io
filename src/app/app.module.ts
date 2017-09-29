@@ -20,7 +20,7 @@ import { ChartPage } from '../pages/chart/chart';
   imports: [
     BrowserModule,
     IonicModule.forRoot(MyApp),
-    AngularFireModule.initializeApp({databaseURL: 'https://meteo-72808.firebaseio.com/'}),
+    AngularFireModule.initializeApp({databaseURL: 'https://<db-name>.firebaseio.com/'}),
     AngularFireDatabaseModule,
     ChartsModule
   ],
