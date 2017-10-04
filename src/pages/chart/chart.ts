@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavParams } from 'ionic-angular';
-import { AngularFireDatabase } from 'angularfire2/database';
+import { AngularFireDatabase } from 'angularfire2/database-deprecated'
 import { BehaviorSubject, Subscription } from 'rxjs'
 import 'rxjs/add/operator/map'
 
@@ -50,6 +50,8 @@ export class ChartPage implements OnInit, OnDestroy {
 					lineTension: 0
 				}];
 
+				if (items.length > 120)
+					console.log("filtering...")
 				this.dataset.labels.length = 0;
 				var modulo = Math.floor(Math.log(items.length));
 				if (modulo < 1) modulo = 1;

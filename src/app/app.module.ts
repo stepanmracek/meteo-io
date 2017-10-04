@@ -4,7 +4,8 @@ import { IonicApp, IonicErrorHandler, IonicModule } from 'ionic-angular';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { StatusBar } from '@ionic-native/status-bar';
 import { AngularFireModule } from 'angularfire2';
-import { AngularFireDatabaseModule } from 'angularfire2/database';
+import { AngularFireDatabaseModule } from 'angularfire2/database-deprecated';
+import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { ChartsModule } from 'ng2-charts';
 
 import { MyApp } from './app.component';
@@ -22,6 +23,7 @@ import { ChartPage } from '../pages/chart/chart';
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp({databaseURL: 'https://<db-name>.firebaseio.com/'}),
     AngularFireDatabaseModule,
+    AngularFirestoreModule,
     ChartsModule
   ],
   bootstrap: [IonicApp],
