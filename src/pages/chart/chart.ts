@@ -1,10 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavParams } from 'ionic-angular';
-import { AngularFireDatabase } from 'angularfire2/database-deprecated'
-import { BehaviorSubject, Subscription } from 'rxjs'
-import 'rxjs/add/operator/map'
-
-import { IDbItem } from '../../app/interfaces';
+import { AngularFireDatabase } from 'angularfire2/database';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import 'rxjs/add/operator/map';
 
 interface IChartData {
 	labels: string[];
@@ -21,52 +19,65 @@ interface IChartData {
 })
 export class ChartPage implements OnInit, OnDestroy {
 
+	tenMinutes = 600;
+	hour = 3600;
+	sixHours = 21600;
+	day = 86400;
+
 	deviceName: string;
 	measurement: string;
-	timespan: number = 120;
-	timespanSubject: BehaviorSubject<number> = new BehaviorSubject<number>(this.timespan);
+	timespan: number;
+	timespanSubject: BehaviorSubject<number>;
 	subscription: Subscription = null;
 
 	constructor(navParams: NavParams, private db: AngularFireDatabase) {
 		var params = navParams.data;
+		this.timespan = this.tenMinutes;
+		this.timespanSubject = new BehaviorSubject<number>(this.timespan);
 		this.deviceName = params.device.name;
 		this.measurement = params.measurement.measurement;
+	}
+
+	private getQueryInterval(timespan: number): string {
+		switch (timespan) {
+			case this.tenMinutes: return '5seconds';
+			case this.hour: return 'minute';
+			case this.sixHours: return '10minutes';
+			case this.day: return '30minutes';
+		}
 	}
 
 	ngOnInit() {
 		this.subscription = this.timespanSubject
 			.switchMap(timespan => {
-				console.log("getting last", timespan, "values");
-				return this.db.list('/values/' + this.deviceName, {
-					query: {
-						orderByKey: true,
-						limitToLast: timespan,
-					}
-				});
-			}).subscribe((items: IDbItem[]) => {
+				var date = new Date();
+				date.setSeconds(date.getSeconds() - timespan);
+				console.log("getting values from last", timespan, "seconds, starting at", date.toJSON());
+				return this.db.list('/measures/' + this.deviceName + '/' + this.getQueryInterval(timespan),
+					ref => ref.orderByKey().startAt(date.toJSON()).limitToLast(timespan))
+					.snapshotChanges()
+					.map(items => { return { items: items }; });
+			}).subscribe(result => {
+				console.log("received", result.items.length, "values");
 				let data = [{
 					label: this.measurement,
 					data: [],
 					lineTension: 0
 				}];
 
-				if (items.length > 120)
-					console.log("filtering...")
 				this.dataset.labels.length = 0;
-				var modulo = Math.floor(Math.log(items.length));
-				if (modulo < 1) modulo = 1;
-				for (var i = 0; i < items.length; i++) {
-					if (items.length > 120 && i % modulo != 0) continue;
+				var startDate = new Date();
+				startDate.setSeconds(startDate.getSeconds() - this.timespan);
+				for (var i = 0; i < result.items.length; i++) {
+					var item = result.items[i];
+					var key = new Date(item.key);
+					if (key < startDate) continue;
 
-					var item = items[i];
-					let label = new Date(item.$key).toLocaleTimeString();
-					data[0].data.push(item[this.measurement]);
+					let label = key.toLocaleTimeString();
+					data[0].data.push(item.payload.val()[this.measurement]);
 					this.dataset.labels.push(label);
 				}
-
-				if (items.length > 120) {
-					console.log("got", items.length, "values; modulo is ", modulo, "-> filtered to ", data[0].data.length, "values");
-				}
+				console.log("filtered to", data[0].data.length, "values");
 
 				this.dataset.data = data;
 			});

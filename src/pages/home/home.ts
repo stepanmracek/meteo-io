@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavController } from 'ionic-angular';
-import { AngularFireDatabase } from 'angularfire2/database-deprecated'
+import { AngularFireDatabase } from 'angularfire2/database'
 import { Observable, Subscription } from 'rxjs'
 import 'rxjs/add/operator/map'
 
-import { IDbItem } from '../../app/interfaces';
 import { ChartPage } from '../chart/chart';
 
 export interface IMeasurement {
@@ -33,45 +32,42 @@ export class HomePage implements OnInit, OnDestroy {
 
 	}
 
-	dbValuesToMeasurement(data: IOverviewData, dbValues: IDbItem[]) {
+	dbValuesToMeasurement(data: IOverviewData, dbValues: Object, timestamp: Date) {
 		data.values.length = 0;
-		if (dbValues.length == 0) {
-			return;
-		}
+		data.timestamp = timestamp;
 
-		data.timestamp = new Date(dbValues[0].$key);
-
-		Object.keys(dbValues[0]).forEach(key => {
-			data.values.push({measurement: key, value: dbValues[0][key]})
+		Object.keys(dbValues).forEach(key => {
+			data.values.push({measurement: key, value: dbValues[key]})
 		})
 	}
 
 	ngOnInit() {
-		this.overviewSubscription = this.db
-			.list('/devices')
-			.mergeMap((devices: IDbItem[]) => {
-				return Observable.from(devices);
-			})
-			.map((device: IDbItem) => {
-				return device.$key;
-			})
-			.switchMap(deviceName => {
-				return this.db
-					.list('/values/' + deviceName, { query: { orderByKey: true, limitToLast: 1 } })
-					.map((values: IDbItem[]) => { return {deviceName: deviceName, values: values}; })
-			})
-			.subscribe(data => {
-				var item = this.overviewData.find(item => item.name == data.deviceName)
-				if (item) {
-					this.dbValuesToMeasurement(item, data.values)
-				} else {
-					var now = new Date();
-					var newItem: IOverviewData = {name: data.deviceName, timestamp: now, values: []};
-					this.dbValuesToMeasurement(newItem, data.values);
-					this.overviewData.push(newItem);
-				}
-				console.log("received overview data:", this.overviewData.map(i => i.name + "-" + i.timestamp.toJSON()));
-			});
+		this.db.list('/devices').snapshotChanges().mergeMap(devices => {
+			return Observable.from(devices)
+		}).map(device => {
+			return device.key
+		}).switchMap(deviceName => {
+			return this.db.list('measures/' + deviceName + '/5seconds', ref => ref.orderByKey().limitToLast(1))
+				.snapshotChanges()
+				.filter(snapshot => snapshot.length > 0)
+				.map(snapshot => {
+					return {
+						device: deviceName,
+						timestamp: new Date(snapshot[0].key),
+						values: snapshot[0].payload.val()
+					}
+				})
+		}).subscribe(data => {
+			console.log(data);
+			var item = this.overviewData.find(item => item.name == data.device);
+			if (item) {
+				this.dbValuesToMeasurement(item, data.values, data.timestamp)
+			} else {
+				var newItem: IOverviewData = {name: data.device, timestamp: undefined, values: []};
+				this.dbValuesToMeasurement(newItem, data.values, data.timestamp);
+				this.overviewData.push(newItem);
+			}
+		});
 
 		this.timestampSubscription = Observable.interval(500).subscribe(() => {
 			var now = new Date();
@@ -128,10 +124,6 @@ export class HomePage implements OnInit, OnDestroy {
 			case "humidity": return "primary";
 			default: return "dark";
 		}
-	}
-
-	select(device) {
-		console.log(device);
 	}
 
 	goto(device: IOverviewData, values: IMeasurement) {

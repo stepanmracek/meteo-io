@@ -11,10 +11,10 @@
   <ion-item>
     <ion-label>Time span</ion-label>
     <ion-select [(ngModel)]="timespan" (ngModelChange)="onTimespanChange($event)">
-      <ion-option [value]="120">Last 10 minutes</ion-option>
-      <ion-option [value]="720">Last hour</ion-option>
-      <ion-option [value]="4320">Last 6 hours</ion-option>
-      <ion-option [value]="17280">Last 24 hours</ion-option>
+      <ion-option [value]="tenMinutes">Last 10 minutes</ion-option>
+      <ion-option [value]="hour">Last hour</ion-option>
+      <ion-option [value]="sixHours">Last 6 hours</ion-option>
+      <ion-option [value]="day">Last 24 hours</ion-option>
     </ion-select>
   </ion-item>
 
