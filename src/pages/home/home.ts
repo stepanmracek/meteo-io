@@ -27,9 +27,11 @@ export class HomePage implements OnInit, OnDestroy {
 	overviewSubscription: Subscription = null;
 	timestampSubscription: Subscription = null;
 	formattedTimestamp: { [deviceName: string]: string } = {};
+	state: "loading" | "loaded" | "empty" | "error";
+	error: string = null;
 
 	constructor(public navCtrl: NavController, private db: AngularFireDatabase) {
-
+		this.state = "loading"
 	}
 
 	dbValuesToMeasurement(data: IOverviewData, dbValues: Object, timestamp: Date) {
@@ -43,11 +45,12 @@ export class HomePage implements OnInit, OnDestroy {
 
 	ngOnInit() {
 		this.db.list('/devices').snapshotChanges().mergeMap(devices => {
-			return Observable.from(devices)
+			if (devices.length == 0) this.state = "empty"
+			return Observable.from(devices);
 		}).map(device => {
 			return device.key
 		}).switchMap(deviceName => {
-			return this.db.list('measures/' + deviceName + '/5seconds', ref => ref.orderByKey().limitToLast(1))
+			return this.db.list('measures/' + deviceName + '/5seconds', q => q.orderByKey().limitToLast(1))
 				.snapshotChanges()
 				.filter(snapshot => snapshot.length > 0)
 				.map(snapshot => {
@@ -62,11 +65,16 @@ export class HomePage implements OnInit, OnDestroy {
 			var item = this.overviewData.find(item => item.name == data.device);
 			if (item) {
 				this.dbValuesToMeasurement(item, data.values, data.timestamp)
+				this.state = "loaded"
 			} else {
 				var newItem: IOverviewData = {name: data.device, timestamp: undefined, values: []};
 				this.dbValuesToMeasurement(newItem, data.values, data.timestamp);
 				this.overviewData.push(newItem);
+				this.state = "loaded"
 			}
+		}, error => {
+			this.state = "error";
+			this.error = error;
 		});
 
 		this.timestampSubscription = Observable.interval(500).subscribe(() => {

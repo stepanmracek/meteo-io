@@ -8,6 +8,25 @@
 
 <ion-content>
 
+  <div style="width: 100%; display: flex; align-items: center; justify-content: center; margin-top: 50px " *ngIf="state == 'loading'">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-card *ngIf="state == 'empty'">
+    <ion-card-content>
+      There is no device
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="state == 'error'">
+    <ion-card-header>
+      Error
+    </ion-card-header>
+    <ion-card-content>
+      {{error}}
+    </ion-card-content>
+  </ion-card>
+
   <ion-list *ngFor="let device of overviewData">
     <ion-item style="text-align: center;">
       <h1>{{device.name}}</h1>
