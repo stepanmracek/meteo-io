@@ -23,6 +23,7 @@ export class ChartPage implements OnInit, OnDestroy {
 	hour = 3600;
 	sixHours = 21600;
 	day = 86400;
+	week = 604800;
 
 	deviceName: string;
 	measurement: string;
@@ -44,6 +45,7 @@ export class ChartPage implements OnInit, OnDestroy {
 			case this.hour: return 'minute';
 			case this.sixHours: return '10minutes';
 			case this.day: return '30minutes';
+			case this.week: return '30minutes';
 		}
 	}
 
