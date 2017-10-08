@@ -10,6 +10,7 @@ import { ChartsModule } from 'ng2-charts';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { ChartPage } from '../pages/chart/chart';
+import { PipesModule } from './pipes.module'
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { ChartPage } from '../pages/chart/chart';
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp({databaseURL: 'https://<db-name>.firebaseio.com/'}),
     AngularFireDatabaseModule,
-    ChartsModule
+    ChartsModule,
+    PipesModule,
   ],
   bootstrap: [IonicApp],
   entryComponents: [

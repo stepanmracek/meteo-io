@@ -1,7 +1,7 @@
 <ion-header>
   <ion-navbar color="primary">
     <ion-title>
-      {{measurement}}
+      {{measurement | niceName}}
     </ion-title>
   </ion-navbar>
 </ion-header>
@@ -18,8 +18,14 @@
       <ion-option [value]="week">Last week</ion-option>
     </ion-select>
   </ion-item>
+  <ion-item>
+    <ion-label>Measurement</ion-label>
+    <ion-select [(ngModel)]="measurement" (ngModelChange)="onMeasurementChange($event)">
+      <ion-option *ngFor="let availableMeasurement of availableMeasurements" [value]="availableMeasurement">{{availableMeasurement | niceName}}</ion-option>
+    </ion-select>
+  </ion-item>
 
-  <div style="display: block; margin-top: 20px">
+  <div *ngIf="dataset.data" style="display: block; margin-top: 20px">
     <canvas baseChart width="400" height="400"
                 [datasets]="dataset.data"
                 [labels]="dataset.labels"
@@ -29,6 +35,5 @@
                 chartType="line">
     </canvas>
   </div>
-  <pre>{{tempLabels|json}}</pre>
 
 </ion-content>

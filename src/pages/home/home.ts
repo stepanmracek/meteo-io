@@ -61,7 +61,6 @@ export class HomePage implements OnInit, OnDestroy {
 					}
 				})
 		}).subscribe(data => {
-			console.log(data);
 			var item = this.overviewData.find(item => item.name == data.device);
 			if (item) {
 				this.dbValuesToMeasurement(item, data.values, data.timestamp)
@@ -103,35 +102,6 @@ export class HomePage implements OnInit, OnDestroy {
 
 	ngOnDestroy() {
 		if (this.overviewSubscription) this.overviewSubscription.unsubscribe();
-	}
-
-	getIcon(measurement: string): string {
-		switch (measurement) {
-			case "temperature": return "thermometer";
-			case "temperature2": return "thermometer";
-			case "humidity": return "water";
-			case "co2": return "cloud";
-			default: return "help";
-		}
-	}
-
-	getUnit(measurement: string): string {
-		switch (measurement) {
-			case "temperature": return "°C";
-			case "temperature2": return "°C";
-			case "humidity": return "%";
-			case "co2": return " ppm";
-			default: return "";
-		}
-	}
-
-	getColor(measurement: string): string {
-		switch (measurement) {
-			case "temperature": return "danger";
-			case "temperature2": return "danger";
-			case "humidity": return "primary";
-			default: return "dark";
-		}
 	}
 
 	goto(device: IOverviewData, values: IMeasurement) {

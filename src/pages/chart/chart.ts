@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavParams } from 'ionic-angular';
 import { AngularFireDatabase } from 'angularfire2/database';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import 'rxjs/add/operator/map';
 
 interface IChartData {
@@ -27,6 +27,8 @@ export class ChartPage implements OnInit, OnDestroy {
 
 	deviceName: string;
 	measurement: string;
+	availableMeasurements: string[];
+	measurementSubject: BehaviorSubject<string>;
 	timespan: number;
 	timespanSubject: BehaviorSubject<number>;
 	subscription: Subscription = null;
@@ -37,6 +39,8 @@ export class ChartPage implements OnInit, OnDestroy {
 		this.timespanSubject = new BehaviorSubject<number>(this.timespan);
 		this.deviceName = params.device.name;
 		this.measurement = params.measurement.measurement;
+		this.measurementSubject = new BehaviorSubject<string>(this.measurement);
+		this.availableMeasurements = params.device.values.map(v => v.measurement)
 	}
 
 	private getQueryInterval(timespan: number): string {
@@ -50,13 +54,14 @@ export class ChartPage implements OnInit, OnDestroy {
 	}
 
 	ngOnInit() {
-		this.subscription = this.timespanSubject
-			.switchMap(timespan => {
+		this.subscription = Observable.merge(this.timespanSubject, this.measurementSubject)
+			.debounceTime(100)
+			.switchMap(() => {
 				var date = new Date();
-				date.setSeconds(date.getSeconds() - timespan);
-				console.log("getting values from last", timespan, "seconds, starting at", date.toJSON());
-				return this.db.list('/measures/' + this.deviceName + '/' + this.getQueryInterval(timespan),
-					ref => ref.orderByKey().startAt(date.toJSON()).limitToLast(timespan))
+				date.setSeconds(date.getSeconds() - this.timespan);
+				console.log("getting values from last", this.timespan, "seconds, starting at", date.toJSON());
+				return this.db.list('/measures/' + this.deviceName + '/' + this.getQueryInterval(this.timespan),
+					ref => ref.orderByKey().startAt(date.toJSON()).limitToLast(this.timespan))
 					.snapshotChanges()
 					.map(items => { return { items: items }; });
 			}).subscribe(result => {
@@ -93,16 +98,14 @@ export class ChartPage implements OnInit, OnDestroy {
 		this.timespanSubject.next(newValue);
 	}
 
-	dataset: IChartData = {
-		labels: [],
-		data: [{
-			label: this.measurement,
-			data: [],
-			lineTension: 0
-		}]
+	onMeasurementChange(newValue) {
+		this.measurementSubject.next(newValue);
 	}
 
-	labels: string[] = [];
+	dataset: IChartData = {
+		labels: [],
+		data: undefined
+	}
 
 	// lineChart
 	public lineChartOptions: any = {
